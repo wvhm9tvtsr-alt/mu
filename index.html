@@ -237,6 +237,15 @@ function costResult(r){const factor=r.basis==='unit'?r.quantity:1,cost=r.cost===
 function validCosts(d){return d&&Array.isArray(d.records)&&Array.isArray(d.history)&&d.records.every(r=>typeof r.id==='string'&&typeof r.category==='string'&&r.category.trim()&&typeof r.name==='string'&&r.name.trim()&&(r.plan===undefined||typeof r.plan==='string'&&r.plan.length<=200)&&((Number.isSafeInteger(r.quantity)&&r.quantity>0)||(r.basis==='total'&&typeof r.quantity==='string'&&r.quantity.length<=200))&&['unit','total'].includes(r.basis)&&(r.cost===null||Number.isFinite(r.cost)&&r.cost>=0)&&(r.price===null||Number.isFinite(r.price)&&r.price>=0)&&Object.values(costResult(r)).every(v=>v===null||Number.isFinite(v))&&(r.archived===undefined||typeof r.archived==='boolean')&&(r.deleted===undefined||typeof r.deleted==='boolean'))&&new Set(d.records.map(r=>r.id)).size===d.records.length;}
 try{const raw=localStorage.getItem(COSTS_KEY);if(raw){const d=JSON.parse(raw);if(!validCosts(d))throw Error();costsData=d;}}catch{costsLoadError=true;}
 const costsArea=document.createElement('section');costsArea.id='costsArea';costsArea.innerHTML=`
+<style>
+#costsRows .costInstrumentGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;margin-top:12px}
+#costsRows .costInstrumentGrid>.agentGroup{min-width:0;margin:0;padding:14px}
+#costsRows .costInstrumentGrid>.agentGroup[open]{grid-column:1/-1}
+#costsRows .costInstrumentGrid>.agentGroup>summary{font-size:15px;overflow-wrap:anywhere}
+#costsRows .costInstrumentGrid>.agentGroup>summary strong{display:block;margin:0;font-size:inherit}
+#costsRows .costInstrumentGrid>.agentGroup>summary span{display:block;margin:8px 0 0;font-size:13px}
+@media(max-width:700px){#costsRows .costInstrumentGrid{gap:6px}#costsRows .costInstrumentGrid>.agentGroup{padding:8px}#costsRows .costInstrumentGrid>.agentGroup>summary{font-size:12px}#costsRows .costInstrumentGrid>.agentGroup>summary span{font-size:11px}#costsRows .costInstrumentGrid>.agentGroup[open]{padding:14px}}
+</style>
 <div class="sectionTitle" style="justify-content:flex-start;flex-wrap:wrap"><h3>儀器、微整成本</h3><button id="newCost" class="primary">新增</button></div>
 <p id="costsStatus" role="status"></p>
 <form id="costsForm" class="financeForm" hidden>
@@ -276,11 +285,12 @@ function renderCosts(){
   group.addEventListener('toggle',()=>{if(!group.isConnected)return;if(group.open)expandedCosts.add(category);else expandedCosts.delete(category);});
   const summary=document.createElement('summary'),title=document.createElement('strong'),count=document.createElement('span');title.textContent=category;count.textContent=records.length+' 筆';summary.append(title,count);group.append(summary);
   if(records.length){
+   const itemContainer=category==='儀器'?document.createElement('div'):group;if(category==='儀器'){itemContainer.className='costInstrumentGrid';group.append(itemContainer);}
    for(const name of new Set(records.map(r=>costDisplay(r).name))){
    const item=document.createElement('details'),key=JSON.stringify([category,name]),plans=records.filter(r=>costDisplay(r).name===name).sort((a,b)=>{const order=r=>costDisplay(r).plan.startsWith('眼周探頭')?0:costDisplay(r).plan.startsWith('全臉探頭')?1:2;return order(a)-order(b);});item.className='agentGroup';item.dataset.item=name;item.open=expandedCostItems.has(key)||!!q;item.addEventListener('toggle',()=>{if(!item.isConnected)return;if(item.open)expandedCostItems.add(key);else expandedCostItems.delete(key);});const itemSummary=document.createElement('summary'),itemName=document.createElement('strong'),planCount=document.createElement('span');itemName.textContent=name;planCount.textContent=plans.length+' 個方案';itemSummary.append(itemName,planCount);item.append(itemSummary);if(!showArchivedCosts&&typeof addCostBreakEven==='function')addCostBreakEven(item,name);if(!showArchivedCosts){const tools=document.createElement('div');tools.className='tools';action(tools,'新增方案',()=>openCost(null,{category,name,basis:plans[0].basis}));item.append(tools);}
    const scroll=document.createElement('div');scroll.className='scroll';const table=document.createElement('table');table.innerHTML='<thead><tr><th>方案／探頭</th><th>數量</th><th>成本</th><th>定價</th><th>淨利</th><th>操作</th></tr></thead>';const body=document.createElement('tbody');
    for(const r of plans){const tr=document.createElement('tr'),result=costResult(r);for(const v of [costDisplay(r).plan||'未命名方案',r.quantity||'—',r.cost===null?'未填':costsMoney(r.cost)+' 元'+(r.basis==='unit'?'／件':'／整筆'),r.price===null?'未填':costsMoney(r.price)+' 元'+(r.basis==='unit'?'／件':'／整筆'),result.profit===null?'—':costsMoney(result.profit)+' 元'])td(tr,v);const ops=td(tr,'');if(showArchivedCosts)action(ops,'還原',()=>{if(commitCost({...r,archived:false,deleted:false},'還原'))renderCosts();});else{action(ops,'編輯方案',()=>openCost(r));action(ops,'刪除方案',()=>{if(confirm('刪除此方案？刪除後可從「已刪除方案」還原；已儲存的醫生結帳不受影響。')&&commitCost({...r,archived:true,deleted:true},'刪除')){resetCost();renderCosts();}});}body.append(tr);}
-   table.append(body);scroll.append(table);item.append(scroll);group.append(item);
+   table.append(body);scroll.append(table);item.append(scroll);itemContainer.append(item);
    }
   }else{const empty=document.createElement('p');empty.textContent='此分類尚無紀錄。';group.append(empty);}
   $('costsRows').append(group);
