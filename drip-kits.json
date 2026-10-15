@@ -1,0 +1,358 @@
+[
+  {
+    "name": "營養快充點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "半胱胺酸",
+        "quantity": 1
+      },
+      {
+        "item": "B群",
+        "quantity": 1
+      },
+      {
+        "item": "維他命C",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "聰明醒腦點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "保肝",
+        "quantity": 1
+      },
+      {
+        "item": "銀杏",
+        "quantity": 1
+      },
+      {
+        "item": "B12",
+        "quantity": 2
+      },
+      {
+        "item": "維他命C",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "術後修復點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "B群",
+        "quantity": 1
+      },
+      {
+        "item": "維他命C",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "補鐵元氣點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "鐵劑",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "好眠鎂人點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "鎂",
+        "quantity": 1
+      },
+      {
+        "item": "B12",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "抗痘淨膚點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "鋅",
+        "quantity": 2
+      },
+      {
+        "item": "穀胱甘肽",
+        "quantity": 1
+      },
+      {
+        "item": "保肝",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "頂級透亮點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "高濃維他命C",
+        "quantity": 1
+      },
+      {
+        "item": "穀胱甘肽",
+        "quantity": 1
+      },
+      {
+        "item": "傳明酸",
+        "quantity": 1
+      },
+      {
+        "item": "保肝",
+        "quantity": 1
+      },
+      {
+        "item": "B12",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "極效修護點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "麩醯胺酸",
+        "quantity": 1
+      },
+      {
+        "item": "治敏健",
+        "quantity": 1
+      },
+      {
+        "item": "維他命C",
+        "quantity": 1
+      },
+      {
+        "item": "B群",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "高階淨化點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "保肝",
+        "quantity": 1
+      },
+      {
+        "item": "B群",
+        "quantity": 1
+      },
+      {
+        "item": "銀杏",
+        "quantity": 1
+      },
+      {
+        "item": "鋅",
+        "quantity": 1
+      },
+      {
+        "item": "治敏健",
+        "quantity": 1
+      },
+      {
+        "item": "穀胱甘肽",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "極致貴婦點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "生理食鹽水",
+        "quantity": 1
+      },
+      {
+        "item": "麩醯胺酸",
+        "quantity": 1
+      },
+      {
+        "item": "半胱胺酸",
+        "quantity": 1
+      },
+      {
+        "item": "治敏健",
+        "quantity": 1
+      },
+      {
+        "item": "維他命C",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "輕盈代謝點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "葡萄糖",
+        "quantity": 1
+      },
+      {
+        "item": "卡尼丁",
+        "quantity": 1
+      },
+      {
+        "item": "肝得建",
+        "quantity": 1
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "name": "高階代謝點滴",
+    "items": [
+      {
+        "item": "輸液套",
+        "quantity": 1
+      },
+      {
+        "item": "葡萄糖",
+        "quantity": 1
+      },
+      {
+        "item": "卡尼丁",
+        "quantity": 2
+      },
+      {
+        "item": "肝得建",
+        "quantity": 2
+      },
+      {
+        "item": "靜脈留置針",
+        "quantity": 1
+      }
+    ]
+  }
+]
