@@ -11,7 +11,7 @@ const costsArea=document.createElement('section');costsArea.id='costsArea';costs
 <div class="sectionTitle" style="justify-content:flex-start;flex-wrap:wrap"><h3>儀器、微整成本</h3><button id="newCost" class="primary">新增</button></div>
 <p id="costsStatus" role="status"></p>
 <form id="costsForm" class="financeForm" hidden>
-<h4 id="costsFormTitle" class="wide">新增成本</h4>
+<h4 id="costsFormTitle" class="wide">新增方案</h4>
 <label>分類<select name="category" required><option>儀器</option><option>針劑</option><option>水光</option><option>點滴</option><option>埋線</option></select></label>
 <label>名稱<input name="name" required maxlength="200"></label>
 <label>方案名稱<input name="plan" maxlength="200" placeholder="例如單次、三次套組"></label>
@@ -20,7 +20,7 @@ const costsArea=document.createElement('section');costsArea.id='costsArea';costs
 <label>成本（元）<input name="cost" type="number" min="0" step="0.01" required></label>
 <label>定價（元）<input name="price" type="number" min="0" step="0.01" placeholder="未填定價可留空"></label>
 <div class="wide totalCard"><span>淨利</span><strong id="costsPreview">0 元</strong><small id="costsFormula"></small></div>
-<div class="wide"><button class="primary">儲存</button><button id="cancelCost" type="button">取消</button></div><p id="costsFeedback" class="wide formFeedback" role="alert"></p></form>
+<div class="wide"><button class="primary">儲存方案</button><button id="cancelCost" type="button">取消</button></div><p id="costsFeedback" class="wide formFeedback" role="alert"></p></form>
 
 <div class="tools"><input id="costsSearch" placeholder="搜尋分類、名稱或方案" aria-label="搜尋儀器、微整成本"><button id="costsArchiveToggle">查看封存紀錄</button></div>
 <div id="costsRows"></div>
@@ -32,7 +32,7 @@ function saveCosts(d,restore=false){if(costsLoadError&&!restore){$('costsStatus'
 function commitCost(r,actionName){const previous=costsData.records.find(x=>x.id===r.id)||null,d={...costsData,records:[...costsData.records.filter(x=>x.id!==r.id),r],history:[...costsData.history,{date:new Date().toISOString(),action:actionName,previous,record:structuredClone(r)}]};return validCosts(d)&&saveCosts(d);}
 function resetCost(){editingCost=null;$('costsForm').reset();$('costsForm').hidden=true;}
 function previewCost(){const f=$('costsForm').elements,r={basis:f.basis.value,quantity:Number(f.quantity.value),cost:Number(f.cost.value),price:f.price.value===''?null:Number(f.price.value)};$('costsPreview').textContent=costResult(r).profit===null?'未填定價':costsMoney(costResult(r).profit)+' 元';$('costsFormula').textContent=r.basis==='unit'?'淨利＝（定價 − 成本）× 數量':'淨利＝定價 − 成本';}
-function openCost(r,preset){editingCost=r?.id||null;const form=$('costsForm');form.reset();if(preset){form.elements.name.value=preset.name;}if(r||preset){const category=(r||preset).category;if(![...form.elements.category.options].some(o=>o.value===category)){const option=document.createElement('option');option.value=category;option.textContent=category;form.elements.category.append(option);}form.elements.category.value=category;}if(r){if(![...form.elements.category.options].some(o=>o.value===r.category)){const option=document.createElement('option');option.value=r.category;option.textContent=r.category;form.elements.category.append(option);}fill(form,r);}$('costsFormTitle').textContent=r?'編輯成本':'新增成本';$('costsFeedback').textContent='';form.hidden=false;previewCost();form.scrollIntoView({block:'start'});form.elements.category.focus({preventScroll:true});}
+function openCost(r,preset){editingCost=r?.id||null;const form=$('costsForm');form.reset();if(preset){form.elements.name.value=preset.name;}if(r||preset){const category=(r||preset).category;if(![...form.elements.category.options].some(o=>o.value===category)){const option=document.createElement('option');option.value=category;option.textContent=category;form.elements.category.append(option);}form.elements.category.value=category;}if(r){if(![...form.elements.category.options].some(o=>o.value===r.category)){const option=document.createElement('option');option.value=r.category;option.textContent=r.category;form.elements.category.append(option);}fill(form,r);}$('costsFormTitle').textContent=r?'編輯方案：'+r.name:'新增方案';$('costsFeedback').textContent='';form.hidden=false;previewCost();form.scrollIntoView({block:'start'});form.elements.category.focus({preventScroll:true});}
 function renderCosts(){
  if(costsLoadError)$('costsStatus').textContent='無法讀取既有成本資料，原資料未覆蓋，請匯入備份。';
  $('costsArchiveToggle').textContent=showArchivedCosts?'返回目前紀錄':'查看封存紀錄';$('costsRows').replaceChildren();
@@ -47,7 +47,7 @@ function renderCosts(){
    for(const name of new Set(records.map(r=>r.name))){
    const item=document.createElement('details'),key=JSON.stringify([category,name]),plans=records.filter(r=>r.name===name);item.className='agentGroup';item.dataset.item=name;item.open=expandedCostItems.has(key)||!!q;item.addEventListener('toggle',()=>{if(!item.isConnected)return;if(item.open)expandedCostItems.add(key);else expandedCostItems.delete(key);});const itemSummary=document.createElement('summary'),itemName=document.createElement('strong'),planCount=document.createElement('span');itemName.textContent=name;planCount.textContent=plans.length+' 個方案';itemSummary.append(itemName,planCount);item.append(itemSummary);if(!showArchivedCosts){const tools=document.createElement('div');tools.className='tools';action(tools,'新增方案',()=>openCost(null,{category,name}));item.append(tools);}
    const scroll=document.createElement('div');scroll.className='scroll';const table=document.createElement('table');table.innerHTML='<thead><tr><th>方案名稱</th><th>數量</th><th>成本</th><th>定價</th><th>淨利</th><th>操作</th></tr></thead>';const body=document.createElement('tbody');
-   for(const r of plans){const tr=document.createElement('tr'),result=costResult(r);for(const v of [r.plan||'未命名方案',r.quantity,costsMoney(r.cost)+' 元'+(r.basis==='unit'?'／件':'／整筆'),r.price===null?'未填':costsMoney(r.price)+' 元'+(r.basis==='unit'?'／件':'／整筆'),result.profit===null?'—':costsMoney(result.profit)+' 元'])td(tr,v);const ops=td(tr,'');if(showArchivedCosts)action(ops,'還原',()=>{if(commitCost({...r,archived:false},'還原'))renderCosts();});else{action(ops,'編輯',()=>openCost(r));action(ops,'封存',()=>{if(confirm('封存此成本紀錄？原資料保留，可還原。')&&commitCost({...r,archived:true},'封存')){resetCost();renderCosts();}});}body.append(tr);}
+   for(const r of plans){const tr=document.createElement('tr'),result=costResult(r);for(const v of [r.plan||'未命名方案',r.quantity,costsMoney(r.cost)+' 元'+(r.basis==='unit'?'／件':'／整筆'),r.price===null?'未填':costsMoney(r.price)+' 元'+(r.basis==='unit'?'／件':'／整筆'),result.profit===null?'—':costsMoney(result.profit)+' 元'])td(tr,v);const ops=td(tr,'');if(showArchivedCosts)action(ops,'還原',()=>{if(commitCost({...r,archived:false},'還原'))renderCosts();});else{action(ops,'編輯方案',()=>openCost(r));action(ops,'封存',()=>{if(confirm('封存此成本紀錄？原資料保留，可還原。')&&commitCost({...r,archived:true},'封存')){resetCost();renderCosts();}});}body.append(tr);}
    table.append(body);scroll.append(table);item.append(scroll);group.append(item);
    }
   }else{const empty=document.createElement('p');empty.textContent='此分類尚無紀錄。';group.append(empty);}
