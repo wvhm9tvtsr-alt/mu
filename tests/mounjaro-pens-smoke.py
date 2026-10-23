@@ -11,11 +11,15 @@ with sync_playwright() as p:
     page.goto(BASE,wait_until='networkidle')
     other=page.evaluate('cloudSnapshot()')
     page.locator('#tabs button').get_by_text('猛健樂記錄',exact=True).click()
+    page.locator('#penClosed').click()
     assert page.locator('#mounjaroLegacy').get_attribute('open') is not None
     expect(page.locator('#mounjaroRows tr')).to_have_count(1)
     expect(page.locator('#mounjaroRows')).to_be_visible()
     expect(page.locator('#mounjaroLegacy > summary')).to_contain_text('1 筆')
     assert page.evaluate('mounjaro.records')==legacy['records']
+    assert page.evaluate('localStorage.getItem(MOUNJARO_KEY)')==json.dumps(legacy,ensure_ascii=False)
+    page.locator('#penActive').click()
+    expect(page.locator('#mounjaroLegacy')).to_be_hidden()
     def create(label,cc,cost):
         page.locator('#penNew').click();f=page.locator('#penForm')
         for k,v in {'label':label,'date':'2026-10-01','dose':'測試','cc':cc,'cost':cost}.items():f.locator(f'[name={k}]').fill(v)
@@ -64,11 +68,17 @@ with sync_playwright() as p:
     assert page.evaluate('mounjaroPenSummary(mounjaro.pens.find(p=>p.label==="第一隻")).profit')==85110
     assert page.evaluate('mounjaro.history.at(-1).action')=='修改售出'
     # Editing legacy data must not remove the independent ledgers.
+    page.locator('#penClosed').click()
     if page.locator('#mounjaroLegacy').get_attribute('open') is None:page.locator('#mounjaroLegacy > summary').click()
     page.locator('#mounjaroRows button').get_by_text('編輯',exact=True).click()
     page.locator('#mounjaroForm [name=name]').fill('歷史更正')
     page.locator('#mounjaroForm button.primary').click()
     assert page.evaluate('mounjaro.pens.length')==2
+    assert page.evaluate('mounjaro.history.at(-1).previous.name')=='歷史客人'
+    page.reload(wait_until='networkidle')
+    page.locator('#tabs button').get_by_text('猛健樂記錄',exact=True).click()
+    page.locator('#penClosed').click()
+    expect(page.locator('#mounjaroRows')).to_contain_text('歷史更正')
     assert page.evaluate('mounjaro.history[0]')==legacy['history'][0]
     # Failed writes preserve the previous in-memory state.
     original=page.evaluate('JSON.stringify(mounjaro)')
@@ -78,6 +88,7 @@ with sync_playwright() as p:
     assert page.evaluate('JSON.stringify(mounjaro)')==original
     page.evaluate('() => {Storage.prototype.setItem=window.testSet;}');page.locator('#penForm').evaluate("f=>{f.hidden=true;delete f.dataset.cloudDirty}")
     # Export includes complete history and both ledgers; validate restored payload.
+    page.locator('#penClosed').click()
     page.locator('#mounjaroLegacy details > summary').click()
     with page.expect_download() as download:page.locator('#mounjaroExport').click()
     saved=json.loads(open(download.value.path()).read());assert len(saved['pens'])==2
