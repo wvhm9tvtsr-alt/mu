@@ -11,7 +11,10 @@ with sync_playwright() as p:
     page.goto(BASE,wait_until='networkidle')
     other=page.evaluate('cloudSnapshot()')
     page.locator('#tabs button').get_by_text('猛健樂記錄',exact=True).click()
-    assert page.locator('#mounjaroLegacy').get_attribute('open') is None
+    assert page.locator('#mounjaroLegacy').get_attribute('open') is not None
+    expect(page.locator('#mounjaroRows tr')).to_have_count(1)
+    expect(page.locator('#mounjaroRows')).to_be_visible()
+    expect(page.locator('#mounjaroLegacy > summary')).to_contain_text('1 筆')
     assert page.evaluate('mounjaro.records')==legacy['records']
     def create(label,cc,cost):
         page.locator('#penNew').click();f=page.locator('#penForm')
@@ -61,7 +64,7 @@ with sync_playwright() as p:
     assert page.evaluate('mounjaroPenSummary(mounjaro.pens.find(p=>p.label==="第一隻")).profit')==85110
     assert page.evaluate('mounjaro.history.at(-1).action')=='修改售出'
     # Editing legacy data must not remove the independent ledgers.
-    page.locator('#mounjaroLegacy > summary').click()
+    if page.locator('#mounjaroLegacy').get_attribute('open') is None:page.locator('#mounjaroLegacy > summary').click()
     page.locator('#mounjaroRows button').get_by_text('編輯',exact=True).click()
     page.locator('#mounjaroForm [name=name]').fill('歷史更正')
     page.locator('#mounjaroForm button.primary').click()
@@ -94,6 +97,26 @@ with sync_playwright() as p:
     assert page.evaluate('mounjaro.history.filter(h=>h.penId)')==expected_audit
     assert page.evaluate("async () => {let p=cloudSnapshot();const d=JSON.parse(p.data[MOUNJARO_KEY]);delete d.pens;d.history=d.history.filter(h=>!h.penId);p.data[MOUNJARO_KEY]=JSON.stringify(d);await cloudApply(cloudUpgradeSnapshot(p,storedData,true),cloudEpoch);return mounjaro.pens.length}")==2
     assert page.evaluate('mounjaro.history.filter(h=>h.penId)')==expected_audit
+    # Recovery search reads backups without changing current records or pen ledgers.
+    missing={**legacy['records'][0], 'id':'missing-from-backup','name':'待補回紀錄'}
+    page.evaluate("async d => {const payload=cloudSnapshot();payload.data[MOUNJARO_KEY]=JSON.stringify(d);await cloudBackup(payload,'測試舊紀錄來源')}",{'records':[missing],'history':[]})
+    before_recovery=page.evaluate('JSON.stringify(mounjaro)')
+    page.locator('#mounjaroFindOld').click()
+    expect(page.locator('#mounjaroRecoveryStatus')).to_contain_text('找到')
+    assert page.evaluate('JSON.stringify(mounjaro)')==before_recovery
+    assert page.locator('#mounjaroRecoveryChoices button').get_by_text('補回缺少的 1 筆',exact=True).count()==1
+    page.once('dialog',lambda d:d.accept())
+    page.locator('#mounjaroRecoveryChoices button').get_by_text('補回缺少的 1 筆',exact=True).click()
+    expect(page.locator('#mounjaroRecoveryStatus')).to_contain_text('已補回 1 筆')
+    assert page.evaluate('mounjaro.pens')==expected_pens
+    assert page.evaluate('mounjaro.records.some(r=>r.id==="missing-from-backup")') is True
+    assert page.locator('#mounjaroLegacy').get_attribute('open') is not None
+    expect(page.locator('#mounjaroRows')).to_contain_text('待補回紀錄')
+    # Same source cannot introduce duplicate records.
+    page.locator('#mounjaroFindOld').click()
+    expect(page.locator('#mounjaroRecoveryStatus')).to_contain_text('找到')
+    assert page.locator('#mounjaroRecoveryChoices button').get_by_text('補回缺少的 1 筆',exact=True).count()==0
+    assert page.evaluate("Object.keys(localStorage).some(k=>k.startsWith('mu-mounjaro-before-recovery-'))") is True
     assert not errors,errors
     print('PASS: separate pens, legacy preservation, precise quantities/money, cost once, oversell guard, settlement/reopen, reversal audit, reload, failed writes, backups and other modules')
     browser.close()
