@@ -46,9 +46,13 @@ with sync_playwright() as p:
     assert page.evaluate("(()=>{const d=structuredClone(storedData),r=d.events.find(e=>e.kind==='reversal'); d.events.push({...r,id:'duplicate'});return storedValid(d)})()") is False
     # Profile updates keep balances and audit before/after values.
     page.locator('#storedEdit').click()
+    assert form.locator('[name=birthday]').input_value()=='1990-02-28'
+    assert form.locator('[name=birthday]').get_attribute('type')=='text'
+    form.locator('[name=birthday]').fill('5/20')
     form.locator('[name=level]').fill('白金')
     form.locator('button.primary').click()
     assert page.evaluate('storedData.events.at(-1).previous.level')=='VIP 自訂'
+    assert page.evaluate('storedData.customers[0].birthday')=='5/20'
     assert page.evaluate('storedTotals(storedData,storedSelected).balance')==100000
     # A failed storage write must not mutate in-memory or persisted balances.
     saved=page.evaluate('localStorage.getItem(STORED_KEY)')
@@ -63,6 +67,7 @@ with sync_playwright() as p:
     page.locator('#storedCustomers button').first.click()
     assert page.evaluate('storedTotals(storedData,storedSelected).balance')==100000
     assert page.evaluate('cloudHasDrafts()') is False
+    assert page.evaluate('storedData.customers[0].birthday')=='5/20'
     current=page.evaluate('cloudSnapshot()')
     for key,value in before['data'].items():
         if key!='mu-stored-value-v1': assert current['data'][key]==value,key
