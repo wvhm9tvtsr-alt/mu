@@ -20,7 +20,9 @@ with sync_playwright() as p:
     assert page.locator('#storedName b').count()==0
     def transact(kind, **fields):
         f=page.locator('#storedTransaction')
-        f.locator('[name=kind]').select_option(kind)
+        page.locator('#storedDeduct' if kind=='debit' else '#storedTopup').click()
+        expect(page.locator('#storedTransactionTitle')).to_have_text('扣儲值金' if kind=='debit' else '儲值／贈送')
+        expect(f.locator('[name=amount]')).to_be_visible() if kind=='debit' else expect(f.locator('[name=paid]')).to_be_visible()
         f.locator('[name=date]').fill('2026-10-23')
         for k,v in fields.items(): f.locator(f'[name={k}]').fill(str(v))
         f.locator('button.primary').click()
@@ -96,7 +98,7 @@ with sync_playwright() as p:
     page.locator('#storedCustomers button').first.click()
     transact('topup',paid='1',gift='0')
     fresh=page.evaluate('localStorage.getItem(STORED_KEY)')
-    sf=stale.locator('#storedTransaction'); sf.locator('[name=kind]').select_option('debit')
+    sf=stale.locator('#storedTransaction'); stale.locator('#storedDeduct').click()
     sf.locator('[name=date]').fill('2026-10-23'); sf.locator('[name=amount]').fill('1')
     sf.locator('button.primary').click()
     expect(stale.locator('#storedStatus')).to_contain_text('儲存失敗')
