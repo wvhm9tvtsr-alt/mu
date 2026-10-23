@@ -11,6 +11,7 @@ with sync_playwright() as p:
     # Keep all existing module payloads byte-for-byte across ledger operations.
     before=page.evaluate('cloudSnapshot()')
     page.locator('#tabs button').get_by_text('客人儲值',exact=True).click()
+    expect(page.locator('#storedTotalRemaining')).to_have_text('0 元')
     page.locator('#storedNew').click()
     form=page.locator('#storedProfile')
     for name,value in {'birthday':'1990-02-28','name':'測試客人 <b>','level':'VIP 自訂'}.items():
@@ -28,6 +29,7 @@ with sync_playwright() as p:
         f.locator('button.primary').click()
     transact('topup',paid='1000.10',gift='200.20',note='首儲')
     expect(page.locator('#storedSummary')).to_have_text('累計儲值：1,000.1 元｜剩餘金額：1,200.3 元')
+    expect(page.locator('#storedTotalRemaining')).to_have_text('1,200.3 元')
     transact('topup',paid='0',gift='50')
     expect(page.locator('#storedSummary')).to_have_text('累計儲值：1,000.1 元｜剩餘金額：1,250.3 元')
     transact('debit',amount='250.30',note='測試扣款')
@@ -43,6 +45,8 @@ with sync_playwright() as p:
     page.once('dialog',lambda d:d.accept())
     page.locator('#storedHistory button').first.click()
     assert page.evaluate('storedTotals(storedData,storedSelected).balance')==100000
+    expect(page.locator('#storedTotalRemaining')).to_have_text('1,000 元')
+    expect(page.locator('#storedTotalDebited')).to_have_text('250.3 元')
     assert page.locator('#storedHistory button').count()==1
     assert page.locator('#storedHistory').inner_text().count('已撤銷')==1
     assert page.evaluate("(()=>{const d=structuredClone(storedData),r=d.events.find(e=>e.kind==='reversal'); d.events.push({...r,id:'duplicate'});return storedValid(d)})()") is False
@@ -104,11 +108,29 @@ with sync_playwright() as p:
     expect(stale.locator('#storedStatus')).to_contain_text('儲存失敗')
     assert page.evaluate('localStorage.getItem(STORED_KEY)')==fresh
     stale.close()
+    # Overall totals include every customer and stay unchanged when filtering.
+    page.locator('#storedNew').click()
+    form.locator('[name=name]').fill('第二位客人')
+    form.locator('button.primary').click()
+    transact('topup',paid='123.45',gift='10')
+    expect(page.locator('#storedTotalRemaining')).to_have_text('1,134.45 元')
+    expect(page.locator('#storedTotalPaid')).to_have_text('1,124.55 元')
+    expect(page.locator('#storedTotalGift')).to_have_text('260.2 元')
+    expect(page.locator('#storedTotalDebited')).to_have_text('250.3 元')
+    ledger=page.evaluate('localStorage.getItem(STORED_KEY)')
+    page.locator('#storedSearch').fill('第二位客人')
+    expect(page.locator('#storedCustomers button')).to_have_count(1)
+    expect(page.locator('#storedTotalRemaining')).to_have_text('1,134.45 元')
+    assert page.evaluate('localStorage.getItem(STORED_KEY)')==ledger
+    page.reload(wait_until='networkidle')
+    page.locator('#tabs button').get_by_text('客人儲值',exact=True).click()
+    expect(page.locator('#storedTotalRemaining')).to_have_text('1,134.45 元')
     # Corrupt ledger is never automatically replaced with empty data.
     page.evaluate("cloudNativeSet.call(localStorage,STORED_KEY,'corrupt')")
     page.reload(wait_until='networkidle')
     page.locator('#tabs button').get_by_text('客人儲值',exact=True).click()
     expect(page.locator('#storedStatus')).to_contain_text('無法讀取')
+    expect(page.locator('#storedTotalRemaining')).to_have_text('無法計算')
     assert page.evaluate('localStorage.getItem(STORED_KEY)')=='corrupt'
     assert not errors,errors
     print('PASS: mobile UI, customer/profile audit, topup/gifts, exact cents, debit/insufficient funds, reversal/duplicate guard, reload, failed writes, existing data preservation, full backup, legacy snapshots, corrupt storage; no page errors')
