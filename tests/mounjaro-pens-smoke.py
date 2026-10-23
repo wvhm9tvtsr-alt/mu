@@ -67,10 +67,24 @@ with sync_playwright() as p:
     page.locator('#penSaleForm button.primary').click()
     assert page.evaluate('mounjaroPenSummary(mounjaro.pens.find(p=>p.label==="第一隻")).profit')==85110
     assert page.evaluate('mounjaro.history.at(-1).action')=='修改售出'
+    # Settled legacy history also supports adding records with an audit trail.
+    page.locator('#penClosed').click()
+    if page.locator('#mounjaroLegacy').get_attribute('open') is None:page.locator('#mounjaroLegacy > summary').click()
+    page.locator('#newMounjaro').click()
+    for k,v in {'date':'2026-10-23','name':'補登客人','dose':'補登','cc':'0.25','cost':'20','price':'120'}.items():
+        page.locator(f'#mounjaroForm [name={k}]').fill(v)
+    page.locator('#mounjaroForm button.primary').click()
+    expect(page.locator('#mounjaroRows')).to_contain_text('補登客人')
+    assert page.evaluate('mounjaro.history.at(-1).action')=='新增'
+    assert page.evaluate('mounjaro.pens.length')==2
+    page.reload(wait_until='networkidle')
+    page.locator('#tabs button').get_by_text('猛健樂記錄',exact=True).click()
+    page.locator('#penClosed').click()
+    expect(page.locator('#mounjaroRows')).to_contain_text('補登客人')
     # Editing legacy data must not remove the independent ledgers.
     page.locator('#penClosed').click()
     if page.locator('#mounjaroLegacy').get_attribute('open') is None:page.locator('#mounjaroLegacy > summary').click()
-    page.locator('#mounjaroRows button').get_by_text('編輯',exact=True).click()
+    page.locator('#mounjaroRows tr').filter(has_text='歷史客人').get_by_role('button',name='編輯',exact=True).click()
     page.locator('#mounjaroForm [name=name]').fill('歷史更正')
     page.locator('#mounjaroForm button.primary').click()
     assert page.evaluate('mounjaro.pens.length')==2
