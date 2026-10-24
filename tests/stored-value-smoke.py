@@ -18,6 +18,7 @@ with sync_playwright() as p:
         form.locator(f'[name={name}]').fill(value)
     form.locator('button.primary').click()
     assert page.locator('#storedName').inner_text()=='測試客人 <b>'
+    expect(page.locator('#storedCustomers button')).to_have_count(0)
     assert page.locator('#storedName b').count()==0
     def transact(kind, **fields):
         f=page.locator('#storedTransaction')
@@ -40,6 +41,14 @@ with sync_playwright() as p:
     assert page.evaluate('localStorage.getItem(STORED_KEY)')==saved
     transact('debit',amount='1000')
     assert page.evaluate('storedTotals(storedData,storedSelected).balance')==0
+    expect(page.locator('#storedCustomers button')).to_have_count(0)
+    expect(page.locator('#storedListInfo')).to_contain_text('已隱藏 1 位')
+    zero_ledger=page.evaluate('localStorage.getItem(STORED_KEY)')
+    page.locator('#storedShowZero').check()
+    expect(page.locator('#storedCustomers button')).to_have_count(1)
+    assert page.evaluate('localStorage.getItem(STORED_KEY)')==zero_ledger
+    page.locator('#storedShowZero').uncheck()
+    expect(page.locator('#storedCustomers button')).to_have_count(0)
     transact('debit',amount='0.01')
     expect(page.locator('#storedStatus')).to_contain_text('餘額不足')
     page.once('dialog',lambda d:d.accept())
@@ -47,6 +56,7 @@ with sync_playwright() as p:
     assert page.evaluate('storedTotals(storedData,storedSelected).balance')==100000
     expect(page.locator('#storedTotalRemaining')).to_have_text('1,000 元')
     expect(page.locator('#storedTotalDebited')).to_have_text('250.3 元')
+    expect(page.locator('#storedCustomers button')).to_have_count(1)
     assert page.locator('#storedHistory button').count()==1
     assert page.locator('#storedHistory').inner_text().count('已撤銷')==1
     assert page.evaluate("(()=>{const d=structuredClone(storedData),r=d.events.find(e=>e.kind==='reversal'); d.events.push({...r,id:'duplicate'});return storedValid(d)})()") is False
