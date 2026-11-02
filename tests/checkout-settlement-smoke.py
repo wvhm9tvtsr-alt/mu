@@ -10,6 +10,11 @@ with sync_playwright() as p:
  def fill(kind,values,save=True):
   page.locator('#checkoutAdd-'+kind).click();f=page.locator('#checkoutForm')
   for k,v in values.items():
+   if kind=='petty' and k=='pending':
+    page.locator('#checkoutPendingAdd').click()
+    page.locator('[data-pending-item]').fill('測試品項')
+    page.locator('[data-pending-amount]').fill(v)
+    continue
    el=f.locator('[name='+k+']')
    if k=='status':el.select_option(v)
    else:el.fill(v)
