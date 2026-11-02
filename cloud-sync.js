@@ -2,6 +2,7 @@
 const CLOUD_CONFIG_KEY='mu-cloud-config-v1',CLOUD_SESSION_KEY='mu-cloud-session-v1',CLOUD_META_KEY='mu-cloud-meta-v1';
 const cloudNativeSet=Storage.prototype.setItem,cloudNativeRemove=Storage.prototype.removeItem;
 const cloudModules=[
+ {key:CHECKOUT_KEY,name:'結帳紀錄',get:()=>checkoutData,valid:checkoutValid,set:d=>{checkoutData=d;checkoutLoadError=false;checkoutClose();}},
  {key:STORED_KEY,name:'客人儲值',get:()=>storedData,valid:storedValid,set:d=>{storedData=d;storedLoadError=false;storedSelected=null;}},
  {key:KEY,name:'原始工作表',get:()=>sheets,valid:validate,set:d=>{const name=sheets[current]?.name;sheets=d;orderSheets();current=Math.max(0,sheets.findIndex(s=>s.name===name));selected=null;}},
  {key:FINANCE_KEY,name:'股東分成',get:()=>finance,valid:goodFinance,set:d=>{finance=d;financeLoadFailed=false;}},
@@ -34,7 +35,7 @@ function cloudRead(key){try{return JSON.parse(localStorage.getItem(key)||'null')
 function cloudSet(key,value){cloudNativeSet.call(localStorage,key,JSON.stringify(value));}
 function cloudConfigValid(c){if(!c||!/^https:\/\/[a-z0-9]{10,64}\.supabase\.co$/.test(c.url)||typeof c.publishableKey!=='string')return false;if(/^sb_publishable_[A-Za-z0-9_-]+$/.test(c.publishableKey))return true;try{const part=c.publishableKey.split('.')[1],payload=JSON.parse(atob(part.replace(/-/g,'+').replace(/_/g,'/')));return payload.role==='anon';}catch{return false;}}
 function cloudSnapshot(){return {version:1,data:Object.fromEntries(cloudModules.map(m=>[m.key,localStorage.getItem(m.key)??JSON.stringify(m.get())]))};}
-function cloudUpgradeSnapshot(p, fallback=storedEmpty(), preservePens=false){if(preservePens&&p?.data?.[MOUNJARO_KEY]){try{const d=JSON.parse(p.data[MOUNJARO_KEY]);if(validMounjaro(d))p={...p,data:{...p.data,[MOUNJARO_KEY]:JSON.stringify(mounjaroPreservePens(d))}};}catch{}}if(p?.version===1&&p.data&&!(STORED_KEY in p.data))return {...p,data:{...p.data,[STORED_KEY]:JSON.stringify(fallback)}};return p;}
+function cloudUpgradeSnapshot(p, fallback=storedEmpty(), preservePens=false){if(preservePens&&p?.data?.[MOUNJARO_KEY]){try{const d=JSON.parse(p.data[MOUNJARO_KEY]);if(validMounjaro(d))p={...p,data:{...p.data,[MOUNJARO_KEY]:JSON.stringify(mounjaroPreservePens(d))}};}catch{}}if(p?.version===1&&p.data){const data={...p.data};if(!(STORED_KEY in data))data[STORED_KEY]=JSON.stringify(fallback);if(!(CHECKOUT_KEY in data)){if(checkoutLoadError)return p;data[CHECKOUT_KEY]=localStorage.getItem(CHECKOUT_KEY)??JSON.stringify(checkoutData);}return {...p,data};}return p;}
 function cloudSnapshotValid(p){if(!p||p.version!==1||!p.data||Object.keys(p.data).length!==cloudModules.length||new TextEncoder().encode(JSON.stringify(p)).length>8388608)return false;try{return cloudModules.every(m=>typeof p.data[m.key]==='string'&&m.valid(JSON.parse(p.data[m.key])));}catch{return false;}}
 async function cloudHashes(p){const entries=await Promise.all(cloudModules.map(async m=>{const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p.data[m.key]));return [m.key,[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('')];}));return Object.fromEntries(entries);}
 document.addEventListener('input',e=>{const form=e.target.closest?.('form');if(form&&!cloudArea.contains(form))form.dataset.cloudDirty='true';},true);
