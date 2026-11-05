@@ -34,7 +34,13 @@ with sync_playwright() as p:
  assert page.evaluate('window.writeCount')==1
  assert page.evaluate('checkoutData.settlements.length')==1
  assert page.evaluate('checkoutData.settlements[0].records.length')==4
- expect(page.locator('#checkoutTotal-ledger')).to_contain_text('600.6 元')
+ expect(page.locator('#checkoutRows-ledger article')).to_have_count(0)
+ page.locator('#checkoutHistoryView').click()
+ expect(page.locator('.checkoutSectionsScroll')).to_be_hidden()
+ page.locator('#checkoutSettlementSelect').select_option(index=1)
+ expect(page.locator('#checkoutTotal-ledger')).to_contain_text('50.55 元')
+ expect(page.locator('#checkoutTotal-deposit')).to_be_hidden()
+ expect(page.locator('#checkoutRows-ledger details').first).not_to_have_attribute('open','')
  expect(page.locator('#checkoutRows-ledger')).to_contain_text('測試客人／50.55 元')
  expect(page.locator('#checkoutTotal-petty')).to_contain_text('125.55 元')
  assert page.locator('#checkoutRows-ledger button').count()==0
@@ -42,6 +48,7 @@ with sync_playwright() as p:
  snapshot=page.evaluate('JSON.stringify(checkoutData.settlements[0])')
  page.reload(wait_until='networkidle');page.locator('#tabs button').get_by_text('結帳紀錄',exact=True).click()
  expect(page.locator('#checkoutRows-ledger tr')).to_have_count(0)
+ page.locator('#checkoutHistoryView').click()
  page.locator('#checkoutSettlementSelect').select_option(index=1)
  expect(page.locator('#checkoutRows-ledger')).to_contain_text('核對員')
  assert page.evaluate('JSON.stringify(checkoutData.settlements[0])')==snapshot

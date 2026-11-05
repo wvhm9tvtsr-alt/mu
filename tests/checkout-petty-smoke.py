@@ -22,6 +22,7 @@ with sync_playwright() as p:
  page.locator('#checkoutSettle').click()
  expect(page.locator('#checkoutStatus')).to_contain_text('結算已儲存')
  page.reload(wait_until='networkidle');page.locator('#tabs button').get_by_text('結帳紀錄',exact=True).click()
+ page.locator('#checkoutHistoryView').click()
  page.locator('#checkoutSettlementSelect').select_option(index=1)
  expect(page.locator('#checkoutRows-petty')).to_contain_text('車資／30.25 元')
  assert page.evaluate('cloudSnapshotValid(cloudSnapshot())')
@@ -32,7 +33,7 @@ with sync_playwright() as p:
  assert page.evaluate('checkoutValid(checkoutData)')
  assert page.evaluate('JSON.stringify(checkoutData)')==before
  # Editing legacy current records preserves old amount and permits a real description.
- page.evaluate("()=>{checkoutData.settlements=[];checkoutSettlementView=null;checkoutRender()}")
+ page.evaluate("()=>{checkoutData.settlements=[];checkoutSettlementView=null;checkoutHistoryView=false;checkoutRender()}")
  page.locator('#checkoutRows-petty button').get_by_text('編輯',exact=True).click()
  expect(page.locator('[data-pending-amount]')).to_have_value('25')
  page.locator('[data-pending-item]').fill('補填品項');page.locator('#checkoutForm button.primary').click()

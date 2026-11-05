@@ -37,8 +37,8 @@ with sync_playwright() as p:
     page.once('dialog',lambda d:d.accept());page.locator('#checkoutCancel').click()
     save(add('deposit',{'amount':'80.15'}))
     save(add('deposit',{'amount':'20.25','status':'已核對'}))
-    expect(page.locator('#checkoutTotal-deposit')).to_contain_text('100.4 元')
-    expect(page.locator('#checkoutTotal-deposit')).to_contain_text('80.15 元')
+    expect(page.locator('#checkoutTotal-deposit')).to_be_hidden()
+    assert page.locator('#checkoutTotal-ledger .totalCard').count()==1
     save(add('claim',{'item':'耗材','amount':'30.35'}))
     save(add('petty',{'amount':'1000','pending':'125.55'}))
     expect(page.locator('#checkoutTotal-petty')).to_contain_text('125.55 元')
@@ -46,14 +46,18 @@ with sync_playwright() as p:
     expect(page.locator('#checkoutFeedback')).to_contain_text('未回帳不可大於')
     page.once('dialog',lambda d:d.accept());page.locator('#checkoutCancel').click()
     # Edit amount, preserve prior version, update totals.
+    expect(page.locator('#checkoutRows-claim details')).not_to_have_attribute('open','')
+    page.locator('#checkoutRows-claim summary').click()
     page.locator('#checkoutRows-claim button').get_by_text('編輯',exact=True).click()
     page.locator('#checkoutForm [name=amount]').fill('35.45');save(page.locator('#checkoutForm'))
     expect(page.locator('#checkoutTotal-claim')).to_contain_text('35.45 元')
     assert page.evaluate('checkoutData.history.at(-1).previous.amount')==3035
     # Archive excludes from totals; restore brings it back.
+    page.locator('#checkoutRows-claim summary').click()
     page.once('dialog',lambda d:d.accept());page.locator('#checkoutRows-claim button').get_by_text('封存',exact=True).click()
     expect(page.locator('#checkoutTotal-claim')).to_contain_text('0 元')
     page.locator('#checkoutArchived').check()
+    page.locator('#checkoutRows-claim summary').click()
     page.once('dialog',lambda d:d.accept());page.locator('#checkoutRows-claim button').get_by_text('還原',exact=True).click()
     page.locator('#checkoutArchived').uncheck()
     expect(page.locator('#checkoutTotal-claim')).to_contain_text('35.45 元')
