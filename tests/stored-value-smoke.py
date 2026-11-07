@@ -55,7 +55,7 @@ with sync_playwright() as p:
     page.locator('#storedHistory button').first.click()
     assert page.evaluate('storedTotals(storedData,storedSelected).balance')==100000
     expect(page.locator('#storedTotalRemaining')).to_have_text('1,000 元')
-    expect(page.locator('#storedTotalDebited')).to_have_text('250.3 元')
+    expect(page.locator('#storedTotalDebited')).to_have_count(0)
     expect(page.locator('#storedCustomers button')).to_have_count(1)
     assert page.locator('#storedHistory button').count()==1
     assert page.locator('#storedHistory').inner_text().count('已撤銷')==1
@@ -124,9 +124,9 @@ with sync_playwright() as p:
     form.locator('button.primary').click()
     transact('topup',paid='123.45',gift='10')
     expect(page.locator('#storedTotalRemaining')).to_have_text('1,134.45 元')
-    expect(page.locator('#storedTotalPaid')).to_have_text('1,124.55 元')
-    expect(page.locator('#storedTotalGift')).to_have_text('260.2 元')
-    expect(page.locator('#storedTotalDebited')).to_have_text('250.3 元')
+    expect(page.locator('#storedTotalPaid')).to_have_count(0)
+    expect(page.locator('#storedTotalGift')).to_have_count(0)
+    expect(page.locator('#storedTotalDebited')).to_have_count(0)
     ledger=page.evaluate('localStorage.getItem(STORED_KEY)')
     page.locator('#storedSearch').fill('第二位客人')
     expect(page.locator('#storedCustomers button')).to_have_count(1)
